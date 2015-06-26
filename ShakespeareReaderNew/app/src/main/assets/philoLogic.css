@@ -30,7 +30,7 @@
 }
 
 body {
-
+    font-family: 'Averia Serif Libre', cursive;
 }
 .text-content-area {
 	font-family: inherit;
@@ -1034,38 +1034,6 @@ ul {
 	padding: 0px 5px;
 	border-bottom: solid 1px #ddd;
 }
-
-/* for the reader app */
-
-.freq_result {
-	font-size: 120%;
-	padding-bottom: 10px;
-}
-
-.conc_bibinfo {
-	font-size: 100%;
-	padding-bottom: 5px;
-	padding-top: 5px;
-}
-.toclink_title {
-	font-size: 120%;
-	padding-bottom: 10px;
-}
-
-.speaker_result {
-	font-size: 110%;
-	padding-bottom: 10px;
-}
-.quicklink_title {
-	font-size: 120%;
-	padding-bottom: 10px;
-}
-
-.conc_result {
-    font-size: 100%;
-    padding-left: 15px;
-    padding-bottom: 5px;
-}
 .sidebar-count {
 	display:inline-block;
 	float:right;
@@ -1299,7 +1267,6 @@ ul {
 }
 .toc-div1 {
     padding-left: .9em;
-
 }
 .toc-div2 {
     padding-left: 1.9em;
@@ -1310,12 +1277,6 @@ ul {
 .toc-div1:hover, .toc-div2:hover, .toc-div3:hover {
 	cursor: pointer;
 }
-
-/* cmc created this for sake of his eyes */
-.toc-body {
-	font-size: 120%;
-}
-
 
 #text-obj-content {
     display: inline-block;

@@ -1,14 +1,14 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 19
-    buildToolsVersion "19.1.0"
+    compileSdkVersion 22
+    buildToolsVersion "22.0.1"
 
     defaultConfig {
         minSdkVersion 14
         targetSdkVersion 19
-        versionCode 1
-        versionName "1.0"
+        versionCode 7
+        versionName "1.4"
     }
     buildTypes {
         release {
@@ -19,5 +19,6 @@ android {
 }
 
 dependencies {
-    compile "com.android.support:support-v4:21.+"
+    compile "com.android.support:support-v4:22.2.0"
+    compile "com.android.support:appcompat-v7:22.2.0"
 }

@@ -41,9 +41,6 @@ public class FreqResultFragment extends Fragment {
     String TAG = "FreqResultFragment";
     BuildListFragment buildListFragment;
     ProgressDialog dialog;
-    public String uri_authority = "artflsrv02.uchicago.edu";
-    public String philo_dir = "philologic4";
-    public String build_name = "shakespeare_demo";
     public WebView mWebView;
     public TextView mTextView;
     public String freq_search_term = "";
@@ -96,6 +93,8 @@ public class FreqResultFragment extends Fragment {
         public String count = "";
         public String search_term = "";
         public String text = "";
+        public String freq_title = "";
+        public String freq_who = "";
         public String freq_citation = "";
         public String freq_url = "";
         public String freq_results = "";
@@ -139,35 +138,43 @@ public class FreqResultFragment extends Fragment {
                     String line = "";
 
                     while ((line = reader.readLine()) != null) {
-                        //Log.i(TAG + "  Your string: ", line.toString());
                         Log.i(TAG + "  Running a report search", "Boolean is true!");
 
-                        Log.i(TAG, "  freq report");
-                        JSONArray jsonArray = new JSONArray(line.toString());
-                        for (int i = 0; i< jsonArray.length(); i++){
-                            JSONObject result_line = jsonArray.getJSONObject(i);
+                        JSONObject jsonObject = new JSONObject(line);
+                        JSONObject query_jsonObject = jsonObject.getJSONObject("query");
+
+                        search_term = query_jsonObject.getString("q");
+                        freq_title = query_jsonObject.getString("title");
+                        freq_who = query_jsonObject.getString("who");
+                        if (!freq_title.isEmpty()) {
+                            freq_title = " title: " + freq_title;
+                        }
+                        if (!freq_who.isEmpty()){
+                            freq_who = " speaker: " + freq_who;
+                        }
+                        freq_citation = freq_title + " " + freq_who;
+                        field = query_jsonObject.getString("frequency_field");
+                        metadata_values = new String[] {field, search_term, freq_citation};
+
+                        JSONArray results_jsonArray = jsonObject.getJSONArray("results");
+                        for (int i = 0; i< results_jsonArray.length(); i++){
+                            JSONArray freq_result_jsonArray = results_jsonArray.getJSONArray(i);
                             hit_number = i + 1;
-                            field = result_line.getString("frequency_field");
-                            freq_citation = result_line.getString("bib_values");
-                            count = result_line.getString("count");
-                            int count_value = Integer.parseInt(count);
-                            freq_url = result_line.getString("url");
-                            search_term = result_line.getString("search_term");
-                            freq_results = result_line.getString("results");
-                            freq_results = freq_results.replaceAll("\n", "");
+                            String freq_query_value = freq_result_jsonArray.optString(0);
+                            JSONObject individual_result_jsonObject = freq_result_jsonArray.getJSONObject(1);
+                            Integer result_count = individual_result_jsonObject.getInt("count");
+                            String result_url = individual_result_jsonObject.getString("url");
                             String out_instance = "";
-                            //Log.i(TAG, " Metadata values:  " +  field + " " + search_term + " " + freq_citation);
-                            metadata_values = new String[] {field, search_term, freq_citation};
-                            if (count_value > 1) {
+                            if (result_count > 1) {
                                 out_instance = "instances";
-                            }
-                            else {
+                            } else {
                                 out_instance = "instance";
                             }
-                            String out_pair = "<div class=\"freq_result\">" + hit_number + ") " + freq_results +
-                                    "<div class=\"freq_count\"><a href=\"" + freq_url + "\">" +
-                                    count + " " + out_instance + "</a></div></div>";
+                            String out_pair = "<div class=\"freq_result\">" + hit_number + ") " + freq_query_value +
+                                    "<div class=\"freq_count\"><a href=\"" + result_url + "\">" +
+                                    result_count + " " + out_instance + "</a></div></div>";
                             all_results.add(out_pair);
+
                         }
                     }
                 }
@@ -205,29 +212,33 @@ public class FreqResultFragment extends Fragment {
                 //Log.i(TAG + " Your freq result: ", all_results.toString());
                 Log.i(TAG, " Freq params to display: " + field + " " + metadata_values);
                 String freq_search_value = metadata_values[0];
+                freq_search_value = freq_search_value.replaceAll("\\[", "");
+                freq_search_value = freq_search_value.replaceAll("\\]", "");
                 freq_search_term = metadata_values[1];
                 String extra_metadata = metadata_values[2];
                 extra_metadata = extra_metadata.replaceAll("[{}\"]", "");
+                Log.i(TAG, "Extra metadata: " + extra_metadata);
                 //String freq_params_to_display = "<div class=\"title\">Frequency of \"" + search_term + "\" by " + field + "</div>";
                 if (freq_search_value.contains("who")){
                     freq_search_value = "speaker";
                 }
                 String freq_params_to_display = "<div class=\"title\">Frequency of \"" + freq_search_term + "\" by " + freq_search_value;
 
-                if (!extra_metadata.isEmpty()) {
+                if (extra_metadata.contains(":")){
                     freq_params_to_display = freq_params_to_display + ", " + extra_metadata + "</div>";
-                } else {
+                }
+                else {
                     freq_params_to_display = freq_params_to_display + "</div>";
                 }
-
                 Log.i(TAG, " Display: " + freq_params_to_display);
                 String html_header = "<html><head><link href=\"philoreader.css\" type=\"text/css\" rel=\"stylesheet\"></head>";
                 String results_string = all_results.toString();
                 results_string = results_string.replaceAll("[\\[\\]]", "");
                 //results_string = results_string.replace("[\\]]", "");
-                results_string = results_string.replaceAll("</div>,", "</div><br>");
+                results_string = results_string.replaceAll("</div>,", "");
+                results_string = results_string.replaceAll("<div class=\"freq_count\">", ":&nbsp;&nbsp;");
                 results_string = "<body>" + html_header + results_string + "</body>";
-                //Log.i(TAG, " Results string: " + results_string);
+                Log.i(TAG, " Results string: " + results_string);
                 if (getView() == null){
                     View view = LayoutInflater.from(context).inflate(R.layout.freq_result_linear, null);
                     mTextView = (TextView) view.findViewById(R.id.freq_params);
@@ -246,14 +257,10 @@ public class FreqResultFragment extends Fragment {
                     @Override
                     public boolean shouldOverrideUrlLoading(WebView view, String url) {
                         Log.i(TAG, " Your URL: " + url);
-                        if (url != null && url.contains("dispatcher.py")) {
+                        if (url != null && url.contains("query?")) {
                             url = url.replace("file:///android_asset/", "");
-                            url = url.replace("&report=concordance", "");
-                            url = url.replace("dispatcher.py/?", "dispatcher.py?report=concordance&");
-                            String my_query_uri = "http://" + uri_authority + "/" + philo_dir + "/"+ build_name + "/" + url +
-                                    "&format=json";
-                            Log.i(TAG, "  FREQ query_uri: " + my_query_uri);
-                            buildListFragment.buildListFragment(my_query_uri);
+                            Log.i(TAG, "  FREQ query_uri: " + url);
+                            buildListFragment.buildListFragment(url);
                             return true;
                         } else {
                             return false;

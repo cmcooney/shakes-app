@@ -8,26 +8,6 @@
     android:orientation="vertical"
     >
 
-    <!--
-    <LinearLayout
-        android:id="@+id/full_text_ll"
-        android:orientation="horizontal"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:layout_gravity="top"
-        android:gravity="top">
-        <WebView
-            android:id="@+id/full_wv_text_result"
-            android:layout_width="wrap_content"
-            android:layout_height="fill_parent"
-            android:scrollbars="vertical"
-            android:scrollbarStyle="outsideOverlay"
-            android:scrollingCache="true"
-            android:fastScrollEnabled="true"
-            />
-    </LinearLayout>
-    -->
-
         <WebView
             android:id="@+id/toc_wv_result"
             android:layout_width="wrap_content"

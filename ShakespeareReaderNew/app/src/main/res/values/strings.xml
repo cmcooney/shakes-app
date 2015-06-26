@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">Philo4 Shakespeare\'s Plays 1.1</string>
+    <string name="app_name">Philo4 Shakespeare\'s Plays</string>
     <string name="action_settings">Settings</string>
     <string name="search">Search terms:</string>
     <string name="search_report">Choose a search report:</string>
@@ -9,6 +9,8 @@
     <string name="search_reset">reset</string>
     <string name="search_conc">Concordance</string>
     <string name="search_freq">Frequency</string>
+    <string name="open_drawer">Open Drawer</string>
+    <string name="close_drawer">Close Drawer</string>
     <string-array name="report_options">
         <item>Concordance Report</item>
         <item>Frequency by Title</item>
@@ -17,6 +19,7 @@
     </string-array>
     <string name="search_speaker">Speaker</string>
     <string name="search_title">Title</string>
+    <string name="search_date">Date</string>
     <string name="no_results">Your search generated no results.</string>
     <string name="freq_search_error">Include a query term in frequency searches.</string>
     <string name="no_connection">You are not connected to the internet. Touch to close app.</string>

@@ -38,7 +38,7 @@ import java.util.regex.Pattern;
  */
 public class FullResultFragment extends Fragment {
     String TAG = "FullResultFragment";
-    BuildFullTextFrag buildFullTextFragment;
+    BuildFullTextFragmentNew buildFullTextFragmentNew;
     BuildTOCFrag buildTOCFragment;
     PassBookmarkGoodies passBookmarkGoodies;
     ProgressDialog dialog;
@@ -47,8 +47,9 @@ public class FullResultFragment extends Fragment {
     public String bookmarkPhiloId2Send = "";
     Context context;
 
-    public interface BuildFullTextFrag {
-        public void buildFullTextFragment(String[] build_query_array, String[] offsets);
+
+    public interface BuildFullTextFragmentNew {
+        public void buildFullTextFragmentNew(String url);
     }
 
     public interface BuildTOCFrag {
@@ -65,7 +66,7 @@ public class FullResultFragment extends Fragment {
         context = getActivity().getApplicationContext();
         Log.i(TAG, " onAttach works...");
         try {
-            buildFullTextFragment = (BuildFullTextFrag) activity;
+            buildFullTextFragmentNew = (BuildFullTextFragmentNew) activity;
             buildTOCFragment = (BuildTOCFrag) activity;
             passBookmarkGoodies = (PassBookmarkGoodies) activity;
         }
@@ -82,7 +83,6 @@ public class FullResultFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState){
         Log.i(TAG, "Made it to FullResultFragment!");
-        //View view = inflater.inflate(R.layout.full_result_frag, container, false);
         View view = inflater.inflate(R.layout.full_result_linear, container, false);
         Log.i(TAG + " In onCreateView ", view.toString());
         return view;
@@ -98,19 +98,16 @@ public class FullResultFragment extends Fragment {
         Log.i(TAG + " Context being sent to GetResults: ", this.toString());
         String test_activity = this.getActivity().toString();
         Log.i(TAG + " What's the activity?: ", test_activity);
-        //GetResults gr = new GetResults(getActivity());
-        //gr.execute(new_query_uri);
         new FullResults().execute(new_query_uri);
 
     }
 
     private class FullResults extends AsyncTask<String, Void, ArrayList>{
 
-        public String field = "";
         public String text = "";
         public String citation = "";
         public String full_shrtcit = "";
-        public String full_philoid = "";
+        public String full_philo_id = "";
         public String title = "";
         public String prev = "";
         public String next = "";
@@ -152,16 +149,69 @@ public class FullResultFragment extends Fragment {
                     while ((line = reader.readLine()) != null) {
                         //Log.i(TAG + "  Your string: ", line.toString());
                         Log.i(TAG + "  Doing a fulltext search", "Boolean is false");
-                        JSONObject jsonObject = new JSONObject(line.toString());
-                        //String dummy_tag = "<cmc>" + "Read text!" + "</cmc>";
+                        JSONObject jsonObject = new JSONObject(line);
                         String json_string = jsonObject.getString("text");
-                        full_shrtcit = jsonObject.getString("shrtcit");
-                        full_philoid = jsonObject.getString("current");
+                        full_philo_id = jsonObject.getString("philo_id");
+                        String[] philo_id_bits = full_philo_id.split(" ");
+                        String philo_id = philo_id_bits[0];
+
                         prev = jsonObject.getString("prev");
+                        Log.i(TAG, " PREV: " + prev);
+                        prev = prev.replaceAll(" ", "%20");
+                        //prev = "/reports/navigation.py?report=navigate&philo_id=" + prev;
                         next = jsonObject.getString("next");
-                        citation = jsonObject.getString("citation");
+                        Log.i(TAG, " NEXT: " + next);
+                        next = next.replaceAll(" ", "%20");
+                        //next = "/reports/navigation.py?report=navigate&philo_id=" + next;
+
+                        JSONObject cit_jsonObject = jsonObject.getJSONObject("citation");
+                        JSONObject cit_title_jsonObject = cit_jsonObject.getJSONObject("title");
+                        title = cit_title_jsonObject.getString("label");
+                        JSONObject cit_date_jsonObject = cit_jsonObject.getJSONObject("date");
+                        String date = cit_date_jsonObject.getString("label");
+                        citation = "<a data-id=\"" + philo_id + "\"><i>" + title + "</i> [<b>" + date + "</b>]</a>";
+                        String section = "";
+
+                        /*
+                        // TEMPORARY HACK, WORKING AROUND FALSE BOOLEAN //
+                        if (line.contains("\"div2\": false")){
+                            Log.i(TAG, " NO DIV 2!!");
+                            JSONObject cit_div_jsonObject = cit_jsonObject.getJSONObject("div1");
+                            section = cit_div_jsonObject.getString("label");
+                        }
+                        else {
+                            JSONObject cit_div_jsonObject = cit_jsonObject.getJSONObject("div2");
+                            section = cit_div_jsonObject.getString("label");
+                        }
+                        */
+
+                        //JSONObject cit_div_jsonObject = cit_jsonObject.getJSONObject("div2");
+                        //String section = cit_div_jsonObject.getString("label");
+
+                        JSONObject div1_cit_jsonObject = cit_jsonObject.getJSONObject("div1");
+                        JSONObject div2_cit_jsonObject = cit_jsonObject.getJSONObject("div2");
+                        JSONObject div3_cit_jsonObject = cit_jsonObject.getJSONObject("div3");
+
+                        if (div3_cit_jsonObject.length() > 0){
+                            Log.i(TAG, " GOT DIV3 STUFF!");
+                            //fulltext_line = div3_cit_jsonObject.getString("href");
+                            section = div3_cit_jsonObject.getString("label");
+                        }
+                        else if (div2_cit_jsonObject.length() > 0) {
+                            Log.i(TAG, " GOT DIV2 STUFF!");
+                            //fulltext_line = div2_cit_jsonObject.getString("href");
+                            section = div2_cit_jsonObject.getString("label");
+                        }
+                        else if (div1_cit_jsonObject.length() > 0){
+                            Log.i(TAG, " GOT DIV1 STUFF!");
+                            //fulltext_line = div1_cit_jsonObject.getString("href");
+                            section = div1_cit_jsonObject.getString("label");
+                        }
+
+                        full_shrtcit = title + " " + section;
+
                         String info_tag = "<shrt>" + full_shrtcit + "</shrt><title>" + citation + "</title>";
-                        String out_pair = info_tag + json_string.toString();
+                        String out_pair = info_tag + json_string;
                         all_results.add(out_pair);
                         Log.i(TAG, "  Creating FullText array! With shrtcit: " + full_shrtcit + " And fullcit: " + citation);
 
@@ -187,7 +237,6 @@ public class FullResultFragment extends Fragment {
                     Log.e(TAG, "Trouble connecting -->" + exception.toString());
                     return null;
                 }
-                //Log.i(TAG + "  Results string: ", all_results.toString());
                 return all_results;
             } // end doInBackGround
 
@@ -198,14 +247,22 @@ public class FullResultFragment extends Fragment {
             }
 
             Log.i(TAG + "  asyncFinished2", "Getting Results from onPostExecute!");
-            Log.i(TAG + " Your current & prev & next philoids + shrtcit: ", full_philoid + " " + prev + "/" + next + "; " + full_shrtcit);
+            Log.i(TAG + " Your current & prev & next philoids + shrtcit: ", full_philo_id + " " + prev + "/" + next + "; " + full_shrtcit);
+            final String next_link = "/reports/navigation.py?report=navigate&philo_id=" + next;
+            final String prev_link = "/reports/navigation.py?report=navigate&philo_id=" + prev;
             String results_array = all_results.toString();
 
-            full_philoid = full_philoid.replaceAll("[\\[\\]]", "");
-            String[] bookMarkEdit = full_philoid.split(",");
-            bookmarkPhiloId2Send = bookMarkEdit[0] + "/" + bookMarkEdit[1] + "/" + bookMarkEdit[2];
-            //Log.i(TAG + " Fulltext results look like this: ", results_array);
-            //String[] split_results_array = results_array.split("</shrt>");
+            full_philo_id = full_philo_id.replaceAll("[\\[\\]]", "");
+            String[] bookMarkEdit = full_philo_id.split(" ");
+            String third_level_bit = ""; // nice hack, Chuck!
+            //Log.i(TAG, "Book marks: " + bookMarkEdit.length);
+            if (bookMarkEdit.length == 2){
+                third_level_bit = "0";
+            }
+            else {
+                third_level_bit = bookMarkEdit[2];
+            }
+            bookmarkPhiloId2Send = bookMarkEdit[0] + "%20" + bookMarkEdit[1] + "%20" + third_level_bit;
             String[] split_results_array = results_array.split("</title>");
             String[] title_chunk = split_results_array[0].split("</shrt>");
             String title_string = title_chunk[1];
@@ -216,14 +273,6 @@ public class FullResultFragment extends Fragment {
             Log.i(TAG, " Title string: " + title_string);
             String results_string = split_results_array[1];
             results_string = results_string.replaceFirst("]$","");
-            //results_string = results_string.replace("<title>", "<div class=\"title\">");
-            //results_string = results_string.replace("</title>", "</div>");
-            //results_string =  results_string.replace("|", "&nbsp;");
-
-            final String[] prev_array = prev.split(" ");
-            final String[] next_array = next.split(" ");
-            final String[] offsets = {};
-
 
             ImageButton next_btn;
             ImageButton prev_btn;
@@ -242,8 +291,7 @@ public class FullResultFragment extends Fragment {
 
                 @Override
                 public void onClick(View v) {
-                    //Log.i(TAG, "You clicked next! Length: " + next_array.length + " " + next_array[0] + "/" + next_array[1] + "/" + next_array[2]);
-                    buildFullTextFragment.buildFullTextFragment(next_array, offsets);
+                    buildFullTextFragmentNew.buildFullTextFragmentNew(next_link);
                 }
             });
 
@@ -251,8 +299,7 @@ public class FullResultFragment extends Fragment {
 
                 @Override
                 public void onClick(View v) {
-                    //Log.i(TAG, "You clicked prev!" + prev_array[0] + "/" + prev_array[1] + "/" + prev_array[2]);
-                    buildFullTextFragment.buildFullTextFragment(prev_array, offsets);
+                    buildFullTextFragmentNew.buildFullTextFragmentNew(prev_link);
                 }
             });
 
@@ -282,7 +329,7 @@ public class FullResultFragment extends Fragment {
                 public void onClick(View view) {
                     Log.i(TAG, " Get the TOC from bib citation" + getTOC);
                     String pid_query_string_match = "";
-                    Pattern pid_regex = Pattern.compile("<a data-id='([^']*)'");
+                    Pattern pid_regex = Pattern.compile("<a data-id=\"([^\"]*)\"");
                     Matcher pid_match = pid_regex.matcher(getTOC);
                     if (pid_match.find()){
                         pid_query_string_match = pid_match.group(1);
@@ -296,9 +343,7 @@ public class FullResultFragment extends Fragment {
             html_header = html_header.concat("<script src=\"http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js\"></script>");
             html_header = html_header.concat("<script src=\"file:///android_asset/scroll2hit.js\" type=\"text/javascript\"></script>");
             html_header = html_header.concat("<script src=\"file:///android_asset/popnote.js\" type=\"text/javascript\"></script></head>");
-            //Log.i(TAG, "HEADER: " + html_header);
             results_string = "<body>" + html_header + results_string + "</body>";
-            //Log.i(TAG, " Full html: " + results_string);
 
             mWebView.getSettings().setBuiltInZoomControls(true);
             mWebView.getSettings().setJavaScriptEnabled(true);
@@ -310,8 +355,6 @@ public class FullResultFragment extends Fragment {
             });
             //mWebView.setLayerType(View.LAYER_TYPE_SOFTWARE, null); // for nativeOnDraw error
             mWebView.loadDataWithBaseURL("file:///android_asset/", results_string, "text/html", "utf-8", "");
-
-            Log.i(TAG, " MADE IT TO BOTTOM of FullResultFrag!!!!");
 
             ///// DO NOT DELETE THESE /////
             // NEED TO SEND PHILO_ID! //

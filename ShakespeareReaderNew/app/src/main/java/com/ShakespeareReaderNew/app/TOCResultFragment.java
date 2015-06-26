@@ -17,6 +17,7 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
@@ -34,13 +35,13 @@ import java.util.ArrayList;
  */
 public class TOCResultFragment extends Fragment {
     String TAG = "TOCResultFragment";
-    BuildFullTextFrag buildFullTextFragment;
+    BuildFullTextFragmentNew buildFullTextFragmentNew;
     ProgressDialog dialog;
     WebView mWebView;
     public Context context;
 
-    public interface BuildFullTextFrag {
-        public void buildFullTextFragment(String[] build_query_array, String[] offsets);
+    public interface BuildFullTextFragmentNew {
+        public void buildFullTextFragmentNew(String url);
     }
 
     @Override
@@ -49,7 +50,7 @@ public class TOCResultFragment extends Fragment {
         context = getActivity().getApplicationContext();
         Log.i(TAG, " onAttach works...");
         try {
-            buildFullTextFragment = (BuildFullTextFrag) activity;
+            buildFullTextFragmentNew = (BuildFullTextFragmentNew) activity;
         }
         catch (ClassCastException e) {
             throw new ClassCastException(activity.toString() + " Problem with asyncResponse");
@@ -82,10 +83,12 @@ public class TOCResultFragment extends Fragment {
 
     public class TOCResults extends AsyncTask<String, Void, ArrayList>{
 
-        public String field = "";
         public String text = "";
         public String title = "";
         public String next = "";
+        public String toc_title = "";
+        public String toc_string = "";
+        public String out_pair = "";
 
         public TOCResults(){}
 
@@ -121,12 +124,26 @@ public class TOCResultFragment extends Fragment {
                     String line = "";
 
                     while ((line = reader.readLine()) != null) {
-                        Log.i(TAG, " Building TOC array");
-                        JSONObject jsonObject = new JSONObject(line.toString());
-                        String toc_string = jsonObject.getString("toc");
-                        String toc_title = jsonObject.getString("citation");
-                        //String tmp_title = "Chuckler's Honor";
-                        String out_pair = "<title>" + toc_title + "</title>" + toc_string;
+                        //Log.i(TAG, " Building TOC array");
+                        JSONObject jsonObject = new JSONObject(line);
+                        JSONArray jsonArray = jsonObject.getJSONArray("toc");
+                        JSONObject cit_jsonObject = jsonObject.getJSONObject("citation");
+                        JSONObject title_jsonObject = cit_jsonObject.getJSONObject("title");
+                        String title = title_jsonObject.getString("label");
+                        JSONObject date_jsonObject = cit_jsonObject.getJSONObject("date");
+                        String date = date_jsonObject.getString("label");
+                        toc_title = "<span class='biblio_cite'>" + title + "</span> [<b>" + date + "</b>]";
+                        toc_string = "";
+                        for (int i = 0; i< jsonArray.length(); i++) {
+                            JSONObject toc_object = jsonArray.getJSONObject(i);
+                            String section = toc_object.getString("label");
+                            String philo_type = toc_object.getString("philo_type");
+                            String philo_id = toc_object.getString("philo_id");
+                            String section_href = "/reports/navigation.py?report=navigate&philo_id=" + philo_id;
+                            toc_string += "<div class=\"toc-" + philo_type + "\"><a href=\"" + section_href + "\">" + section + "</a></div>";
+                        }
+                        //Log.i(TAG, toc_string);
+                        out_pair = "<title>" + toc_title + "</title>" + toc_string;
                         all_results.add(out_pair);
                     }
                 }
@@ -161,17 +178,16 @@ public class TOCResultFragment extends Fragment {
             }
 
             Log.i(TAG + "  asyncFinished3", "Getting Results from onPostExecute!");
-            //Log.i(TAG + " Your toc: ", all_results.toString());
             String results_array = all_results.toString();
-            String results_string = results_array.replaceAll("[\\[\\]]", "");
+            String results_string = results_array.replaceAll("^\\[", "");
+            results_string = results_string.replaceAll("\\]$", "");
             results_string = results_string.replace("<title>", "<div class=\"toc-title\">");
             results_string = results_string.replace("</title>", "</div>");
             results_string =  results_string.replace("|", "&nbsp;");
 
-            //Log.i(TAG + " Grab id from here: ", results_string);
-
             String html_header = "<html><head><link href=\"philoreader.css\" type=\"text/css\" rel=\"stylesheet\"></head>";
-            results_string = "<body>" + html_header + results_string + "</body>";
+            results_string = "<body><div class=\"toc-body\">" + html_header + results_string + "</div></body>";
+            Log.i(TAG, results_string);
 
             if (getView() == null){
                 View view = LayoutInflater.from(context).inflate(R.layout.toc_result_linear, null);
@@ -187,23 +203,8 @@ public class TOCResultFragment extends Fragment {
                 @Override
                 public boolean shouldOverrideUrlLoading(WebView view, String url) {
                     Log.i(TAG, " Your URL: " + url);
-                    if (url != null && url.contains("dispatcher.py")) {
-                        String[] chuck_uri_array = url.split("/");
-                        String[] offsets = {};
-                        String [] query_array = new String[9];
-                        query_array[0] = chuck_uri_array[6];
-                        query_array[1] = chuck_uri_array[7];
-                        query_array[2] = chuck_uri_array[8];
-                        query_array[3] = chuck_uri_array[9];
-                        query_array[4] = "0";
-                        query_array[5] = "0";
-                        query_array[6] = "0";
-                        query_array[7] = "0";
-                        query_array[8] = "";
-                        String chuck_uri = chuck_uri_array[6] + "/" + chuck_uri_array[7] + "/" + chuck_uri_array[8] + "/" + chuck_uri_array[9]
-                                + "/" + chuck_uri_array[10] + "/" + chuck_uri_array[11];
-                        Log.i(TAG, "F-ing with uri. Need: " + chuck_uri);
-                        buildFullTextFragment.buildFullTextFragment(query_array, offsets);
+                    if (url != null) {
+                        buildFullTextFragmentNew.buildFullTextFragmentNew(url);
                         return true;
                     } else {
                         return false;

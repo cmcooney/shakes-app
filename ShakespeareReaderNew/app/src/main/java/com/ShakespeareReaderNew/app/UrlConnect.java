@@ -33,8 +33,7 @@ public class UrlConnect extends AsyncTask<String, Void, Boolean>{
 		try {
 			Log.e(TAG, "TRYING TO CONNECT TO CONDORCET");
 			
-			URL url = new URL("http://condorcet.uchicago.edu");
-			//URL url = new URL("http://barthes.uchicago.edu");
+			URL url = new URL("http://artflsrv02.uchicago.edu");
 			HttpURLConnection urlc = (HttpURLConnection) url.openConnection();
 			urlc.setReadTimeout(10000);
 			urlc.setConnectTimeout(15000);

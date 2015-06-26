@@ -2,25 +2,32 @@
 <items version="2" >
 
     <item
-        jar="/Users/cmcooney/Desktop/android_studio/ShakespeareReaderNew/app/build/intermediates/exploded-aar/com.android.support/support-v4/21.0.3/classes.jar"
+        jar="/Users/cmcooney/Desktop/android-sdk-macosx/extras/android/m2repository/com/android/support/support-annotations/22.2.0/support-annotations-22.2.0.jar"
         jumboMode="false"
-        revision="19.1.0"
-        sha1="2c91c949a45a21cdecf26e03951e46c7beec9ad8">
-        <dex dex="/Users/cmcooney/Desktop/android_studio/ShakespeareReaderNew/app/build/intermediates/pre-dexed/debug/classes-73b24c50b2f56ae6153c376ee9322a6920b0a448.jar" />
+        revision="22.0.1"
+        sha1="66b42a1f3eb7676070b7ef7f14b603483aecbee1">
+        <dex dex="/Users/cmcooney/Desktop/android_studio/ShakespeareReaderNew/app/build/intermediates/pre-dexed/debug/support-annotations-22.2.0-13bbbe44b4780c298536fc1831c817cfb8a532c3.jar" />
     </item>
     <item
-        jar="/Users/cmcooney/Desktop/android-sdk-macosx/extras/android/m2repository/com/android/support/support-annotations/21.0.3/support-annotations-21.0.3.jar"
+        jar="/Users/cmcooney/Desktop/android_studio/ShakespeareReaderNew/app/build/intermediates/exploded-aar/com.android.support/support-v4/22.2.0/jars/libs/internal_impl-22.2.0.jar"
         jumboMode="false"
-        revision="19.1.0"
-        sha1="4b74cefe1f0c1b819e7260c8627a14674e37fd35">
-        <dex dex="/Users/cmcooney/Desktop/android_studio/ShakespeareReaderNew/app/build/intermediates/pre-dexed/debug/support-annotations-21.0.3-3612a6eec6ac537ed7be8d96b965dd1067a9e91e.jar" />
+        revision="22.0.1"
+        sha1="57f2ab85c164ff1676ec64dee787981c046fab79">
+        <dex dex="/Users/cmcooney/Desktop/android_studio/ShakespeareReaderNew/app/build/intermediates/pre-dexed/debug/internal_impl-22.2.0-f60a28ddca25ae45133f1e3469ab8ba183323e60.jar" />
     </item>
     <item
-        jar="/Users/cmcooney/Desktop/android_studio/ShakespeareReaderNew/app/build/intermediates/exploded-aar/com.android.support/support-v4/21.0.3/libs/internal_impl-21.0.3.jar"
+        jar="/Users/cmcooney/Desktop/android_studio/ShakespeareReaderNew/app/build/intermediates/exploded-aar/com.android.support/appcompat-v7/22.2.0/jars/classes.jar"
         jumboMode="false"
-        revision="19.1.0"
-        sha1="01ec05bfbafcc07646ba813000bf2ef11742dd03">
-        <dex dex="/Users/cmcooney/Desktop/android_studio/ShakespeareReaderNew/app/build/intermediates/pre-dexed/debug/internal_impl-21.0.3-4da73838a9e0c3e597ab309d8fc8063422b30923.jar" />
+        revision="22.0.1"
+        sha1="73753982da6bde518f3a4c6b372749981d14d1a0">
+        <dex dex="/Users/cmcooney/Desktop/android_studio/ShakespeareReaderNew/app/build/intermediates/pre-dexed/debug/classes-08274bb25c03c1a1016d8483e72e5f91b70f3452.jar" />
+    </item>
+    <item
+        jar="/Users/cmcooney/Desktop/android_studio/ShakespeareReaderNew/app/build/intermediates/exploded-aar/com.android.support/support-v4/22.2.0/jars/classes.jar"
+        jumboMode="false"
+        revision="22.0.1"
+        sha1="1ee588ff2c4daf7b97c1cbf922a6c7f027285c2f">
+        <dex dex="/Users/cmcooney/Desktop/android_studio/ShakespeareReaderNew/app/build/intermediates/pre-dexed/debug/classes-3dbb1b96763b9f0e17b971b60159d84d220cc431.jar" />
     </item>
 
 </items>

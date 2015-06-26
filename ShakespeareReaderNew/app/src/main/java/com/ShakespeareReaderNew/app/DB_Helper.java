@@ -67,7 +67,7 @@ public class DB_Helper extends SQLiteOpenHelper{
             }
         else {
             bookmarkDB = context.openOrCreateDatabase(DATABASE_NAME, DATABASE_VERSION, null);
-            Log.i(TAG + " DB Create Command: ", CREATE_BOOKMARKS_TABLE + " DB: " + bookmarkDB.toString());
+            //Log.i(TAG + " DB Create Command: ", CREATE_BOOKMARKS_TABLE + " DB: " + bookmarkDB.toString());
             bookmarkDB.execSQL(CREATE_BOOKMARKS_TABLE);
             Log.i(TAG, " Your table is created...");
         }

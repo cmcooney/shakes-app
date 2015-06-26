@@ -8,12 +8,13 @@ import android.content.res.Configuration;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.v4.app.ActionBarDrawerToggle;
+//import android.support.v4.app.ActionBarDrawerToggle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
@@ -36,13 +37,13 @@ import java.util.concurrent.ExecutionException;
 
 public class MainActivity extends FragmentActivity implements
         ListResultFragment.PassQueryUri,
-        ListResultFragment.BuildFullTextFrag,
+        ListResultFragment.BuildFullTextFragmentNew,
         ListResultFragment.BuildTOCFrag,
         ListResultFragment.QuickLinkBibFragment,
-        FullResultFragment.BuildFullTextFrag,
+        FullResultFragment.BuildFullTextFragmentNew,
         FullResultFragment.BuildTOCFrag,
         FullResultFragment.PassBookmarkGoodies,
-        TOCResultFragment.BuildFullTextFrag,
+        TOCResultFragment.BuildFullTextFragmentNew,
         FreqResultFragment.BuildListFragment,
         QuickLinksFragment.QuickLinkSearch,
         InfoFragment.QuickLinkSearch {
@@ -60,10 +61,11 @@ public class MainActivity extends FragmentActivity implements
     public String query_search_type = "concordance"; // default
     EditText search_et;
     EditText speaker_et;
+    EditText date_et;
     EditText title_et;
     public String uri_authority = "artflsrv02.uchicago.edu";
     public String philo_dir = "philologic4";
-    public String build_name = "shakespeare_demo";
+    public String build_name = "shakespeare_plays";
     public boolean canAddBookmark = false;
     public boolean thisIsABookmark = false;
     public boolean lookingAtInfo = false;
@@ -72,6 +74,7 @@ public class MainActivity extends FragmentActivity implements
     public String conc_title_from_freq = "";
     public String conc_author_from_freq = "";
     public String conc_date_from_freq = "";
+    public String conc_who_from_freq = "";
     public String freq_search_term = "";
     public String spinner_value = "concordance";
     public Boolean conc_from_freq;
@@ -84,9 +87,6 @@ public class MainActivity extends FragmentActivity implements
         super.onCreate(savedInstanceState);
         Log.i(TAG + "  onCreate", "onCreate being called!");
 
-        // From Walt's Encyc //
-        // Determine which layout size is being used so we can organize the fragments properly
-
         if (((getResources().getConfiguration().screenLayout &
                 Configuration.SCREENLAYOUT_SIZE_MASK) ==
                 Configuration.SCREENLAYOUT_SIZE_LARGE)
@@ -97,7 +97,6 @@ public class MainActivity extends FragmentActivity implements
         } else {
             layout_type = "phone";
         }
-        Log.i(TAG + "  Which Layout?", layout_type);
 
         // Drawer settings //
 
@@ -113,21 +112,15 @@ public class MainActivity extends FragmentActivity implements
                 R.layout.spinner_item);
         spinner.setAdapter(adapter);
 
-        // skipping Walt's display.getWidth() code in favor of
-        // getScreenOrientation at bottom
-
         if (layout_type.equals("tablet")) {
             if (getScreenOrientation() == 2) {
-                Log.i(TAG + "  Orientation", "landscape");
                 //mDrawerLayout.openDrawer(Gravity.LEFT);
                 mDrawerLayout.setFocusableInTouchMode(false);
             } else if (getScreenOrientation() == 1) {
-                Log.i(TAG + "  Orientation", "portrait");
                 //mDrawerLayout.closeDrawer(Gravity.LEFT);
                 mDrawerLayout.setFocusableInTouchMode(false);
             }
         } else {
-            Log.i(TAG + "  Orientation", "Fixed portrait, you're on a phone...");
             //mDrawerLayout.openDrawer(Gravity.LEFT);
             mDrawerLayout.setFocusableInTouchMode(false);
         }
@@ -144,7 +137,7 @@ public class MainActivity extends FragmentActivity implements
         cd = new com.ShakespeareReaderNew.app.ConnectionDetector(getApplicationContext());
 
         if (!cd.isConnectingToInternet()) {
-            Log.i(TAG + "  ConnectingToInternet", "Aie! Check the connection!");
+            Log.i(TAG, "  ConnectingToInternet");
             //Toast.makeText(this, "Not connected to internet.", Toast.LENGTH_SHORT).show();
             final Dialog dialog = new Dialog(this);
             dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -172,13 +165,13 @@ public class MainActivity extends FragmentActivity implements
 
         }
         else {
-            Log.i(TAG + "  ConnectingToInternet", "You are connected...");
+            Log.i(TAG, "  ConnectingToInternet");
             url_con = new com.ShakespeareReaderNew.app.UrlConnect();
             url_con.execute();
             //Toast.makeText(this, "Ready to begin.", Toast.LENGTH_LONG).show();
             try {
-                if (url_con.get() == false) {
-                    Log.i(TAG + "  URL Connect", "Yike -- server not live!");
+                if (!url_con.get()) {
+                    Log.i(TAG, "Yike -- server not live!");
                     //Toast.makeText(this, "Remote server is down. Try again later.", Toast.LENGTH_SHORT).show();
                     final Dialog dialog = new Dialog(this);
                     dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -215,18 +208,14 @@ public class MainActivity extends FragmentActivity implements
         addBookmark = new com.ShakespeareReaderNew.app.AddBookmark(getApplicationContext());
         addBookmark.createDataBase();
 
-        mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout,
-                R.drawable.ic_navigation_drawer, //nav menu toggle icon
-                R.string.app_name, // nav drawer open - description for accessibility
-                R.string.app_name // nav drawer close - description for accessibility
-        ) {
+        mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout,R.string.open_drawer, R.string.close_drawer) {
             public void onDrawerClosed(View view) {
-                Log.i(TAG + "  onDrawerClosed", "stock code");
+                //Log.i(TAG + "  onDrawerClosed", "stock code");
                 invalidateOptionsMenu();
             }
 
             public void onDrawerOpened(View drawerView) {
-                Log.i(TAG +  "  onDrawerOpened", "stock code");
+                //Log.i(TAG +  "  onDrawerOpened", "stock code");
                 invalidateOptionsMenu();
                 conc_from_freq = null;
 
@@ -287,6 +276,7 @@ public class MainActivity extends FragmentActivity implements
         search_et = (EditText)findViewById(R.id.search_edittext);
         speaker_et = (EditText) findViewById(R.id.speaker_edittext);
         title_et = (EditText) findViewById(R.id.title_edittext);
+        date_et = (EditText) findViewById(R.id.date_edittext);
 
         search.setOnClickListener(new View.OnClickListener() {
 
@@ -318,6 +308,7 @@ public class MainActivity extends FragmentActivity implements
                 search_et.setText("");
                 speaker_et.setText("");
                 title_et.setText("");
+                date_et.setText("");
                 Spinner spinner = (Spinner) findViewById(R.id.spinner);
                 spinner.setSelection(0);
                 //RadioButton reset_conc = (RadioButton) findViewById(R.id.conc_radio);
@@ -410,7 +401,7 @@ public class MainActivity extends FragmentActivity implements
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main, menu);
-        Log.i(TAG + "  onCreateOptionsMenu", "returning true");
+        Log.i(TAG,"  onCreateOptionsMenu");
 
         // show bookmarks here //
         bookmarkMenu = menu.findItem(R.id.show_bookmarks).getSubMenu();
@@ -431,7 +422,7 @@ public class MainActivity extends FragmentActivity implements
         }
         addBookmark.close();
 
-        return super.onCreateOptionsMenu( menu );
+        return super.onCreateOptionsMenu(menu);
     }
 
     @Override
@@ -444,16 +435,13 @@ public class MainActivity extends FragmentActivity implements
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
          super.onPostCreate(savedInstanceState);
-         Log.i(TAG + "  onPostcreate", "running just fine, thanks.");
          mDrawerToggle.syncState();
     }
 
     // Pass any configuration change to the drawer toggle //
-    // Not working 5-13-14
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
          super.onConfigurationChanged(newConfig);
-         Log.i(TAG + "  onConfigurationChanged", "yup, this is firing");
          mDrawerToggle.onConfigurationChanged(newConfig);
     }
 
@@ -462,11 +450,8 @@ public class MainActivity extends FragmentActivity implements
     public boolean onOptionsItemSelected(MenuItem item) {
 
         if (mDrawerToggle.onOptionsItemSelected(item)) {
-            Log.i(TAG + "  onOptionsItemSelected", "drawer toggle true!");
             return true;
         }
-        Log.i(TAG + " menu item clicked: ", item.toString());
-        Log.i(TAG + " menu item ID: ", item.getTitle().toString());
         switch (item.getItemId()){
 
             case R.id.app_info:
@@ -496,7 +481,7 @@ public class MainActivity extends FragmentActivity implements
                         Toast.makeText(this, "You are viewing a bookmarked page.", Toast.LENGTH_SHORT).show();
                     }
                     else {
-                        invalidateOptionsMenu(); // pretty sure this updates the bookmarks menu automatically
+                        invalidateOptionsMenu(); // updates the bookmarks menu automatically
                         bookMark();
                     }
                 }
@@ -533,7 +518,7 @@ public class MainActivity extends FragmentActivity implements
                                 Fragment fr;
                                 fr = new com.ShakespeareReaderNew.app.FullResultFragment();
                                 fr.setArguments(bundle);
-                                Log.i(TAG + "  onClick getting fragment", fr.toString());
+                                Log.i(TAG, "  onClick getting fragment");
                                 FragmentManager fm = getSupportFragmentManager();
                                 Log.i(TAG, " Fulltext click backstack count: " + fm.getBackStackEntryCount());
                                 FragmentTransaction fragTransaction = fm.beginTransaction();
@@ -559,30 +544,25 @@ public class MainActivity extends FragmentActivity implements
         } // end switch logic
     }
 
-    public void displayInfoDialog(String info_string){
-        Log.i(TAG, "in displayInfoDialog: " + info_string);
-        String file_name = info_string + ".html";
-        Bundle bundle = new Bundle();
-        bundle.putString("file_name", file_name);
-        Fragment fr;
-        fr = new com.ShakespeareReaderNew.app.InfoFragment();
-        fr.setArguments(bundle);
-        Log.i(TAG + "  onClick getting fragment", fr.toString());
-        FragmentManager fm = getSupportFragmentManager();
-        Log.i(TAG, " Info click backstack count: " + fm.getBackStackEntryCount());
-        FragmentTransaction fragTransaction = fm.beginTransaction();
-        fragTransaction.addToBackStack(null);
-        fragTransaction.replace(R.id.text, fr, "text");
-        fragTransaction.commit();
-        lookingAtInfo = false;
+    public void passBookmarkGoodies(String full_shrtcit, boolean addBookmarkBoolean, String bookmarkPhiloId2Send) {
+        bookmarkShrtCit = full_shrtcit;
+        canAddBookmark = addBookmarkBoolean;
+        bookmarkPhiloId = bookmarkPhiloId2Send;
+        Log.i(TAG, " WHAT's up with BOOKMARKS? " + bookmarkShrtCit + " " + canAddBookmark + " " + bookmarkPhiloId);
+    }
+
+    public void bookMark() {
+        addBookmark.open();
+        Log.i(TAG, "In bookMark, gotta add something... like: " + bookmarkPhiloId + " " + bookmarkShrtCit + " " + canAddBookmark);
+        addBookmark.addBookmarkItem(bookmarkPhiloId, bookmarkShrtCit);
+        addBookmark.close();
+        bookmarkShrtCit = "";
+        canAddBookmark = false;
+        bookmarkPhiloId = "";
     }
 
     // Determine screen orientation //
     public int getScreenOrientation() {
-    // from http://stackoverflow.com/questions/14955728/getting-orientation-of-android-device //
-
-        Log.i(TAG + "  getScreenOrientation", "At work!");
-        // Query what the orientation currently really is.
         if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
             return 1; // Portrait Mode
 
@@ -591,6 +571,10 @@ public class MainActivity extends FragmentActivity implements
         }
         return 0;
     }
+
+    ////////////////////////////////////////////////////////////////////
+    /// Here on down are query building and navigation/fragment code ///
+    ////////////////////////////////////////////////////////////////////
 
     public void makeMyQueryUri(String my_start_hit, String my_end_hit, String spinner_value) {
         String my_report_value = "";
@@ -619,9 +603,12 @@ public class MainActivity extends FragmentActivity implements
                 query_title = query_title.trim();
                 query_title = query_title.replaceAll(" ", "+");
                 query_title = query_title.replace("|", "%7C");
-                my_query_uri = "http://" + uri_authority + "/" + philo_dir + "/"+ build_name + "/dispatcher.py?" +
+                String query_date = date_et.getText().toString();
+                query_date = query_date.trim();
+                my_query_uri = "http://" + uri_authority + "/" + philo_dir + "/"+ build_name + "/query?" +
                     "report=bibliography&q=&method=proxy&title=" + query_title +
                     "&who=" + query_speaker +
+                    "&date=" + query_date +
                     "&start=" + my_start_hit + "&end=" + my_end_hit + "&pagenum=25&format=json";
             //}
         } else {
@@ -635,12 +622,14 @@ public class MainActivity extends FragmentActivity implements
                 freq_search_term = freq_search_term.replace("|", "%7C");
                 //conc_author_from_freq = conc_author_from_freq.trim();
                 //conc_author_from_freq = conc_author_from_freq.replaceAll(" ", "+");
+                conc_who_from_freq = conc_who_from_freq.trim();
+                conc_who_from_freq = conc_who_from_freq.replaceAll(" ", "+");
                 conc_title_from_freq = conc_title_from_freq.trim();
                 conc_title_from_freq = conc_title_from_freq.replaceAll(" ", "+");
                 conc_title_from_freq = conc_title_from_freq.replace("|", "%7C");
-                my_query_uri = "http://" + uri_authority + "/" + philo_dir + "/"+ build_name + "/dispatcher.py?" +
+                my_query_uri = "http://" + uri_authority + "/" + philo_dir + "/"+ build_name + "/navigate?" +
                         "report=concordance&" + freq_search_term + "&method=proxy&" +
-                        conc_title_from_freq + "&" + conc_date_from_freq +
+                        conc_title_from_freq + "&" + conc_date_from_freq + "&" + conc_who_from_freq +
                         "&start=" + my_start_hit + "&end=" + my_end_hit + "&pagenum=25&format=json";
             }
             else if (spinner_value.contains("concordance")) {
@@ -658,10 +647,13 @@ public class MainActivity extends FragmentActivity implements
                 String query_speaker = speaker_et.getText().toString();
                 query_speaker = query_speaker.trim();
                 query_speaker = query_speaker.replaceAll(" ", "+");
-                my_query_uri = "http://" + uri_authority + "/" + philo_dir + "/"+ build_name + "/dispatcher.py?" +
+                String query_date = date_et.getText().toString();
+                query_date = query_date.trim();
+                my_query_uri = "http://" + uri_authority + "/" + philo_dir + "/"+ build_name + "/navigate?" +
                         "report=concordance&q=" + query_term + "&method=proxy&title=" +
                          query_title +
                         "&who=" + query_speaker +
+                        "&date=" + query_date +
                         "&start=" + my_start_hit + "&end=" + my_end_hit + "&pagenum=25&format=json";
             } else {
                 frequency_field = spinner_value;
@@ -677,43 +669,58 @@ public class MainActivity extends FragmentActivity implements
                 String query_speaker = speaker_et.getText().toString();
                 query_speaker = query_speaker.trim();
                 query_speaker = query_speaker.replaceAll(" ", "+");
-                my_query_uri = "http://" + uri_authority + "/" + philo_dir + "/"+ build_name + "/scripts/get_frequency.py?" +
-                        "report=concordance&q=" + query_term + "&method=proxy&title=" +
+                String query_date = date_et.getText().toString();
+                query_date = query_date.trim();
+                frequency_field = "['" + frequency_field + "']";
+                my_query_uri = "http://" + uri_authority + "/" + philo_dir + "/"+ build_name + "/scripts/get_sorted_frequency.py?" +
+                        "report=concordance&q=" + query_term + "&method=proxy" +
+                        "&start=0&end=20000" + // this is hard coded to grab pretty much all for shakespeare
+                        "&title=" +
                         query_title +
                         "&who=" + query_speaker +
+                        "&date=" + query_date +
                         "&frequency_field=" + frequency_field + "&format=json";
             }
         }
-
-        Log.i(TAG + "  Search submit", "Executing search!");
-        Log.i(TAG + "  Search Text", search_et.getText().toString());
-        Log.i(TAG + "  Speaker Text", speaker_et.getText().toString());
-        Log.i(TAG + "  Title Text", title_et.getText().toString());
-        Log.i(TAG + "  Search Report", my_report_value);
 
         Log.i(TAG, " Hand built URI: " + my_query_uri);
 
         Bundle bundle = new Bundle();
         bundle.putString("query_uri", my_query_uri);
-
-        //Log.i(TAG + "  on result click view is: ", v.toString());
         Fragment fr;
         if (my_report_value.contains("frequency")){
             fr = new com.ShakespeareReaderNew.app.FreqResultFragment();
-            }
+        }
         else {
             fr = new com.ShakespeareReaderNew.app.ListResultFragment();
         }
         fr.setArguments(bundle);
-        Log.i(TAG + "  onClick getting fragment", fr.toString());
         FragmentManager fm = getSupportFragmentManager();
         Log.i(TAG, " Listview click backstack count: "+ fm.getBackStackEntryCount());
         FragmentTransaction fragTransaction = fm.beginTransaction();
         fragTransaction.addToBackStack(null);
         fragTransaction.replace(R.id.text, fr, "text");
         fragTransaction.commit();
-        Log.i(TAG, " Listview post-commit click backstack count: "+ fm.getBackStackEntryCount());
+        Log.i(TAG, " Listview post-commit click backstack count: " + fm.getBackStackEntryCount());
 
+    }
+
+    public void displayInfoDialog(String info_string){
+        Log.i(TAG, "in displayInfoDialog: " + info_string);
+        String file_name = info_string + ".html";
+        Bundle bundle = new Bundle();
+        bundle.putString("file_name", file_name);
+        Fragment fr;
+        fr = new com.ShakespeareReaderNew.app.InfoFragment();
+        fr.setArguments(bundle);
+        Log.i(TAG, "  onClick getting fragment");
+        FragmentManager fm = getSupportFragmentManager();
+        Log.i(TAG, " Info click backstack count: " + fm.getBackStackEntryCount());
+        FragmentTransaction fragTransaction = fm.beginTransaction();
+        fragTransaction.addToBackStack(null);
+        fragTransaction.replace(R.id.text, fr, "text");
+        fragTransaction.commit();
+        lookingAtInfo = false;
     }
 
     public void quickLinkSearch(String quick_link_url){
@@ -740,14 +747,13 @@ public class MainActivity extends FragmentActivity implements
         if (ql_bib_url.contains("author")){
             ql_bib_url = ql_bib_url.replace("./?q=", "");
             my_query_url = "http://" + uri_authority + "/" + philo_dir + "/"+ build_name +
-                "/dispatcher.py?report=bibliography&" + ql_bib_url + "&format=json";
+                "/navigate?report=bibliography&" + ql_bib_url + "&format=json";
 
             Bundle bundle = new Bundle();
             bundle.putString("query_uri", my_query_url);
             Fragment fr;
             fr = new com.ShakespeareReaderNew.app.ListResultFragment();
             fr.setArguments(bundle);
-            Log.i(TAG + "  onClick getting fragment", fr.toString());
             FragmentManager fm = getSupportFragmentManager();
             FragmentTransaction fragTransaction = fm.beginTransaction();
             fragTransaction.addToBackStack(null);
@@ -755,7 +761,6 @@ public class MainActivity extends FragmentActivity implements
             fragTransaction.commit();
            }
         else {
-            ql_bib_url = ql_bib_url.replace("dispatcher.py/", "");
             my_query_url = "http://" + uri_authority + "/" + philo_dir + "/" + build_name +
                     "/scripts/get_table_of_contents.py?" +
                     "philo_id=" + ql_bib_url + "&format=json";
@@ -764,7 +769,6 @@ public class MainActivity extends FragmentActivity implements
             Fragment fr;
             fr = new TOCResultFragment();
             fr.setArguments(bundle);
-            Log.i(TAG + "  onClick getting fragment", fr.toString());
             FragmentManager fm = getSupportFragmentManager();
             FragmentTransaction fragTransaction = fm.beginTransaction();
             fragTransaction.replace(R.id.text, fr, "text");
@@ -772,25 +776,6 @@ public class MainActivity extends FragmentActivity implements
             fragTransaction.commit();
         }
 
-    }
-
-    // Using lots of public variables set and sent from other classes. That's probably thoroughly treif. //
-
-    public void passBookmarkGoodies(String full_shrtcit, boolean addBookmarkBoolean, String bookmarkPhiloId2Send) {
-        bookmarkShrtCit = full_shrtcit;
-        canAddBookmark = addBookmarkBoolean;
-        bookmarkPhiloId = bookmarkPhiloId2Send;
-        Log.i(TAG, " WHAT's up with BOOKMARKS? " + bookmarkShrtCit + " " + canAddBookmark + " " + bookmarkPhiloId);
-    }
-
-    public void bookMark() {
-        addBookmark.open();
-        Log.i(TAG, "In bookMark, gotta add something... like: " + bookmarkPhiloId + " " + bookmarkShrtCit + " " + canAddBookmark);
-        addBookmark.addBookmarkItem(bookmarkPhiloId, bookmarkShrtCit);
-        addBookmark.close();
-        bookmarkShrtCit = "";
-        canAddBookmark = false;
-        bookmarkPhiloId = "";
     }
 
     public void buildListFragment(String query_uri_from_freq){
@@ -812,6 +797,7 @@ public class MainActivity extends FragmentActivity implements
         conc_title_from_freq = "";
         conc_author_from_freq = "";
         conc_date_from_freq = "";
+        conc_who_from_freq = "";
         freq_search_term = "";
         String query_uri_to_munge = query_uri_from_freq;
 
@@ -823,24 +809,39 @@ public class MainActivity extends FragmentActivity implements
             }
             else if (freq_query_params[i].contains("title=")){
                 conc_title_from_freq = freq_query_params[i];
+                String my_freq_2_conc_title = conc_title_from_freq.replace("title=","");
+                if (!my_freq_2_conc_title.isEmpty()) {
+                    title_et.setText(my_freq_2_conc_title);
+                }
             }
             else if (freq_query_params[i].contains("author=")){
                 conc_author_from_freq = freq_query_params[i];
             }
             else if (freq_query_params[i].contains("date=")){
                 conc_date_from_freq = freq_query_params[i];
+                String my_freq_2_conc_date = conc_date_from_freq.replace("date=","");
+                if (!my_freq_2_conc_date.isEmpty()){
+                    date_et.setText(my_freq_2_conc_date);
+                }
+            }
+            else if (freq_query_params[i].contains("who=")){
+                conc_who_from_freq = freq_query_params[i];
+                Log.i(TAG, conc_who_from_freq);
+                String my_freq_2_conc_who = conc_who_from_freq.replace("who=","");
+                if (!my_freq_2_conc_who.isEmpty()){
+                    speaker_et.setText(my_freq_2_conc_who);
+                }
             }
         }
 
         Log.i(TAG, "  FREQ metdata params: term:" + freq_search_term +"/title:" + conc_title_from_freq + "/author:"
-                + conc_author_from_freq + "/date:" + conc_date_from_freq);
+                + conc_who_from_freq + "/date:" + conc_date_from_freq);
 
         Bundle bundle = new Bundle();
         bundle.putString("query_uri", query_uri_from_freq);
         Fragment fr;
         fr = new com.ShakespeareReaderNew.app.ListResultFragment();
         fr.setArguments(bundle);
-        Log.i(TAG + "  onClick getting fragment", fr.toString());
         FragmentManager fm = getSupportFragmentManager();
         Log.i(TAG, " Listview click backstack count: "+ fm.getBackStackEntryCount());
         FragmentTransaction fragTransaction = fm.beginTransaction();
@@ -863,69 +864,31 @@ public class MainActivity extends FragmentActivity implements
 
         Bundle bundle = new Bundle();
         bundle.putString("query_uri", toc_query_uri);
-
         Fragment fr;
         fr = new com.ShakespeareReaderNew.app.TOCResultFragment();
         fr.setArguments(bundle);
-        //Log.i(TAG + "  onClick getting fragment", fr.toString());
         FragmentManager fm = getSupportFragmentManager();
-        //Log.i(TAG, " Fulltext click backstack count: " + fm.getBackStackEntryCount());
         FragmentTransaction fragTransaction = fm.beginTransaction();
         fragTransaction.replace(R.id.text, fr, "text");
         fragTransaction.addToBackStack(null);
         fragTransaction.commit();
-        Log.i(TAG, " Post-commit Fulltext click backstack count: " + fm.getBackStackEntryCount());
     }
 
+    public void buildFullTextFragmentNew(String url){
 
-
-    public void buildFullTextFragment(String[] build_query_array, String[] offsets){
-
-        //Log.i(TAG, " I need to build fulltext queries sensibly: " + build_query_array);
-        //Log.i(TAG, " Check your array length: " + build_query_array.length);
-
-        Log.i(TAG, " in buildFullText.");
-        String[] query_array = new String[9];
-        if (build_query_array.length < 9){
-            query_array[0] = build_query_array[0];
-            query_array[1] = build_query_array[1];
-            query_array[2] = build_query_array[2];
-            query_array[3] = "0";
-            query_array[4] = "0";
-            query_array[5] = "0";
-            query_array[6] = "0";
-            query_array[7] = "0";
-            query_array[8] = "";
-            }
-        else {
-            query_array = build_query_array;
-        }
-
-        String byte_offsets = "";
-        if (offsets != null && offsets.length>0){
-            Log.i(TAG, " offsets content: " + offsets.toString());
-            Log.i(TAG, " offsets length: " + offsets.length);
-            for (int i = 0; i <  offsets.length; i++){
-                byte_offsets = byte_offsets.concat("&byte=" + offsets[i].toString());
-            }
-        }
-        //Log.i(TAG, " Check your array length again: " + query_array.length);
+        Log.i(TAG, " in buildFullTextNew. " + url);
         String new_query_uri = "";
-
-        new_query_uri = "http://" + uri_authority + "/" + philo_dir + "/"+ build_name + "/dispatcher.py/" +
-                query_array[0] + "/" + query_array[1] + "/" + query_array[2] +"?" + byte_offsets + "&format=json";
+        url = url.replace("file:///", "");
         Log.i(TAG, " Hand built URI: " + new_query_uri);
+        new_query_uri = "http://" + uri_authority + "/" + philo_dir + "/" + build_name + "/" +
+                url;
 
         Bundle bundle = new Bundle();
-        // URI.BUILDER IS FUCKING UP MISERABLY!!!!! //
         bundle.putString("query_uri", new_query_uri);
-
         Fragment fr;
         fr = new FullResultFragment();
         fr.setArguments(bundle);
-        //Log.i(TAG + "  onClick getting fragment", fr.toString());
         FragmentManager fm = getSupportFragmentManager();
-        //Log.i(TAG, " Fulltext click backstack count: " + fm.getBackStackEntryCount());
         FragmentTransaction fragTransaction = fm.beginTransaction();
         fragTransaction.replace(R.id.text, fr, "text");
         fragTransaction.addToBackStack(null);
@@ -933,4 +896,4 @@ public class MainActivity extends FragmentActivity implements
         Log.i(TAG, " Post-commit Fulltext click backstack count: " + fm.getBackStackEntryCount());
     }
 
-}
+} // the end, beautiful friend

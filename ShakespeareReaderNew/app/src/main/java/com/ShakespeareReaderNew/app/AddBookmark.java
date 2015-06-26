@@ -8,7 +8,6 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
-import android.net.Uri;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -22,7 +21,7 @@ public class AddBookmark {
     private static String DATABASE_TABLE = "bookmarks";
     public String uri_authority = "artflsrv02.uchicago.edu";
     public String philo_dir = "philologic4";
-    public String build_name = "shakespeare_demo";
+    public String build_name = "shakespeare_plays";
 
     public AddBookmark(Context context){
         this.context = context;
@@ -112,17 +111,13 @@ public class AddBookmark {
             cursor.close();
             return null;
         }
-        String[] bookmark_philoID = cursor.getString(0).split("/");
+        String bookmark_philoID = cursor.getString(0);
         Log.i(TAG, " Your bookmark philoid: " + bookmark_philoID);
-        Uri.Builder builder = new Uri.Builder();
-        builder.scheme("http").authority(uri_authority)
-                .appendPath(philo_dir).appendPath(build_name).appendPath("dispatcher.py")
-                .appendPath(bookmark_philoID[0]).appendPath(bookmark_philoID[1]).appendPath(bookmark_philoID[2])
-                .appendQueryParameter("format", "json");
-        String bookmark_uri = builder.toString();
-        Log.i(TAG, " Your bookmark URI: " + bookmark_uri);
-        bookmarkDB.close();
-        return bookmark_uri;
+        String new_bookmark_uri = "http://" + uri_authority + "/" + philo_dir + "/" +
+                build_name + "/reports/navigation.py?report=navigate&philo_id=" + bookmark_philoID;
+        Log.i(TAG, " Your bookmark URI: " + new_bookmark_uri);
+        dbHelper.close();
+        return new_bookmark_uri;
     }
 
     public void deleteBookmark(String bookmark_to_delete) {
@@ -130,6 +125,6 @@ public class AddBookmark {
         String[] bookmark_delete_val = {bookmark_to_delete};
         bookmarkDB.execSQL("DELETE FROM " + DATABASE_TABLE + " where bookmarkName =? ", bookmark_delete_val);
         Log.i(TAG, " I do believe your record was deleted.");
-        bookmarkDB.close();
+        dbHelper.close();
     }
 }
